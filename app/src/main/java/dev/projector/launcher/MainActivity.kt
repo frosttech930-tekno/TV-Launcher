@@ -1,5 +1,6 @@
 package dev.projector.launcher
 
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.BroadcastReceiver
@@ -7,6 +8,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -17,7 +20,6 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.concurrent.Executors
@@ -27,8 +29,10 @@ class MainActivity : Activity() {
     private lateinit var prefs: LauncherPrefs
     private lateinit var favoritesRow: RecyclerView
     private lateinit var favoritesHint: TextView
-    private lateinit var allAppsGrid: RecyclerView
+    private lateinit var allAppsRow: RecyclerView
     private lateinit var focusedTitle: TextView
+    private lateinit var content: View
+    private lateinit var glow: GradientDrawable
     private lateinit var favoritesAdapter: AppAdapter
     private lateinit var allAppsAdapter: AppAdapter
 
@@ -36,6 +40,8 @@ class MainActivity : Activity() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var apps: List<AppEntry> = emptyList()
     private var hasPlacedInitialFocus = false
+    private var glowColor = AppRepository.DEFAULT_ACCENT
+    private var glowAnimator: ValueAnimator? = null
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) = reloadApps()
@@ -48,16 +54,27 @@ class MainActivity : Activity() {
 
         favoritesRow = findViewById(R.id.favorites_row)
         favoritesHint = findViewById(R.id.favorites_hint)
-        allAppsGrid = findViewById(R.id.all_apps)
+        allAppsRow = findViewById(R.id.all_apps)
         focusedTitle = findViewById(R.id.focused_title)
+        content = findViewById(R.id.content)
+        content.alpha = 0f
 
-        favoritesAdapter = AppAdapter(::launch, ::showAppOptions, ::onAppFocused)
+        // Soft light in the top-left corner that takes on the color of the focused app.
+        glow = GradientDrawable().apply {
+            gradientType = GradientDrawable.RADIAL_GRADIENT
+            setGradientCenter(0.15f, 0f)
+            gradientRadius = resources.displayMetrics.widthPixels * 0.9f
+            setColors(glowColors(glowColor))
+        }
+        findViewById<View>(R.id.ambient_glow).background = glow
+
+        favoritesAdapter = AppAdapter(true, ::launch, ::showAppOptions, ::onAppFocused)
         favoritesRow.layoutManager = LinearLayoutManager(this, RecyclerView.HORIZONTAL, false)
         favoritesRow.adapter = favoritesAdapter
 
-        allAppsAdapter = AppAdapter(::launch, ::showAppOptions, ::onAppFocused)
-        allAppsGrid.layoutManager = GridLayoutManager(this, gridColumns())
-        allAppsGrid.adapter = allAppsAdapter
+        allAppsAdapter = AppAdapter(false, ::launch, ::showAppOptions, ::onAppFocused)
+        allAppsRow.layoutManager = LinearLayoutManager(this, RecyclerView.HORIZONTAL, false)
+        allAppsRow.adapter = allAppsAdapter
 
         bindQuickButtons()
 
@@ -80,6 +97,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        glowAnimator?.cancel()
         unregisterReceiver(packageReceiver)
         executor.shutdown()
         super.onDestroy()
@@ -98,11 +116,6 @@ class MainActivity : Activity() {
             return true
         }
         return super.onKeyDown(keyCode, event)
-    }
-
-    private fun gridColumns(): Int {
-        // Card is 160dp wide plus 10dp margin on each side; 96dp is the overscan padding.
-        return maxOf(3, (resources.configuration.screenWidthDp - 96) / 180)
     }
 
     private fun bindQuickButtons() {
@@ -151,19 +164,48 @@ class MainActivity : Activity() {
         if (!hasPlacedInitialFocus || currentFocus == null) {
             hasPlacedInitialFocus = true
             goToTop()
+            content.animate().alpha(1f).setDuration(400).start()
         }
     }
 
     private fun goToTop() {
-        allAppsGrid.scrollToPosition(0)
+        allAppsRow.scrollToPosition(0)
         favoritesRow.scrollToPosition(0)
-        val target = if (favoritesRow.visibility == View.VISIBLE) favoritesRow else allAppsGrid
+        val target = if (favoritesRow.visibility == View.VISIBLE) favoritesRow else allAppsRow
         target.post { target.getChildAt(0)?.requestFocus() }
     }
 
     private fun onAppFocused(app: AppEntry) {
-        focusedTitle.text = app.label
+        if (focusedTitle.text != app.label) {
+            focusedTitle.animate().cancel()
+            focusedTitle.alpha = 0.3f
+            focusedTitle.text = app.label
+            focusedTitle.animate().alpha(1f).setDuration(200).start()
+        }
+        animateGlowTo(app.accent)
     }
+
+    private fun animateGlowTo(target: Int) {
+        if (target == glowColor) return
+        glowAnimator?.cancel()
+        glowAnimator = ValueAnimator.ofArgb(glowColor, target).apply {
+            duration = 450
+            addUpdateListener {
+                glowColor = it.animatedValue as Int
+                glow.setColors(glowColors(glowColor))
+            }
+            start()
+        }
+    }
+
+    private fun glowColors(color: Int): IntArray = intArrayOf(
+        withAlpha(color, 0x8C),
+        withAlpha(color, 0x26),
+        Color.TRANSPARENT,
+    )
+
+    private fun withAlpha(color: Int, alpha: Int): Int =
+        Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
 
     private fun launch(app: AppEntry) {
         val intent = Intent(Intent.ACTION_MAIN)

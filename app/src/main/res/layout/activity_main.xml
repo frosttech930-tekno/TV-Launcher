@@ -4,8 +4,15 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_home">
 
+    <!-- Tinted to the focused app's color from MainActivity. -->
+    <View
+        android:id="@+id/ambient_glow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <!-- 48dp / 27dp padding keeps everything inside the TV-safe area on projectors with overscan. -->
     <LinearLayout
+        android:id="@+id/content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipChildren="false"
@@ -21,35 +28,10 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextClock
-                    android:id="@+id/clock"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:format12Hour="h:mm"
-                    android:format24Hour="HH:mm"
-                    android:textColor="@color/text_primary"
-                    android:textSize="44sp"
-                    android:textStyle="bold" />
-
-                <TextClock
-                    android:id="@+id/date"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:format12Hour="EEEE, MMMM d"
-                    android:format24Hour="EEEE, MMMM d"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="16sp" />
-            </LinearLayout>
-
             <TextView
                 android:id="@+id/btn_wifi"
                 style="@style/QuickButton"
+                android:layout_marginStart="0dp"
                 android:text="@string/wifi" />
 
             <TextView
@@ -71,17 +53,54 @@
                 android:id="@+id/btn_launcher"
                 style="@style/QuickButton"
                 android:text="@string/launcher" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:orientation="vertical">
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:format12Hour="h:mm"
+                    android:format24Hour="HH:mm"
+                    android:textColor="@color/text_primary"
+                    android:textSize="34sp"
+                    android:textStyle="bold" />
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:format12Hour="EEE, MMM d"
+                    android:format24Hour="EEE, MMM d"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="16sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <TextView
             android:id="@+id/focused_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="18dp"
             android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
             android:singleLine="true"
             android:textColor="@color/text_primary"
-            android:textSize="24sp" />
+            android:textSize="42sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/focused_hint"
+            android:textColor="@color/text_tertiary"
+            android:textSize="16sp" />
 
         <TextView
             style="@style/SectionLabel"
@@ -90,21 +109,19 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/favorites_row"
             android:layout_width="match_parent"
-            android:layout_height="114dp"
+            android:layout_height="184dp"
             android:clipChildren="false"
-            android:clipToPadding="false"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp" />
+            android:clipToPadding="false" />
 
         <TextView
             android:id="@+id/favorites_hint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
             android:text="@string/favorites_hint"
             android:textColor="@color/text_secondary"
-            android:textSize="15sp"
+            android:textSize="18sp"
             android:visibility="gone" />
 
         <TextView
@@ -114,10 +131,8 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/all_apps"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="152dp"
             android:clipChildren="false"
-            android:clipToPadding="false"
-            android:paddingBottom="27dp" />
+            android:clipToPadding="false" />
     </LinearLayout>
 </FrameLayout>

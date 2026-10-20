@@ -1,15 +1,21 @@
 package dev.projector.launcher
 
+import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
+/** A horizontal row of app cards. [large] cards are used for the "For you" row. */
 class AppAdapter(
+    private val large: Boolean,
     private val onClick: (AppEntry) -> Unit,
     private val onMenu: (AppEntry) -> Unit,
     private val onFocus: (AppEntry) -> Unit,
@@ -28,8 +34,13 @@ class AppAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder =
-        Holder(LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_app, parent, false)
+        val metrics = parent.resources.displayMetrics
+        view.layoutParams.width = (metrics.density * if (large) 256 else 200).toInt()
+        view.layoutParams.height = (metrics.density * if (large) 144 else 112).toInt()
+        return Holder(view)
+    }
 
     override fun onBindViewHolder(holder: Holder, position: Int) = holder.bind(items[position])
 
@@ -38,9 +49,15 @@ class AppAdapter(
         private val iconGroup: View = view.findViewById(R.id.icon_group)
         private val icon: ImageView = view.findViewById(R.id.icon)
         private val label: TextView = view.findViewById(R.id.label)
+        private val density = view.resources.displayMetrics.density
         private var app: AppEntry? = null
 
         init {
+            val iconSize = (density * if (large) 64 else 48).toInt()
+            icon.layoutParams.width = iconSize
+            icon.layoutParams.height = iconSize
+            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, if (large) 17f else 15f)
+
             view.clipToOutline = true
             view.setOnClickListener { app?.let(onClick) }
             view.setOnLongClickListener {
@@ -55,10 +72,8 @@ class AppAdapter(
                     false
                 }
             }
-            view.setOnFocusChangeListener { v, hasFocus ->
-                val scale = if (hasFocus) 1.1f else 1f
-                v.animate().scaleX(scale).scaleY(scale).setDuration(120).start()
-                v.translationZ = if (hasFocus) v.resources.displayMetrics.density * 8 else 0f
+            view.setOnFocusChangeListener { _, hasFocus ->
+                showFocus(hasFocus, animate = true)
                 if (hasFocus) app?.let(onFocus)
             }
         }
@@ -66,35 +81,53 @@ class AppAdapter(
         fun bind(entry: AppEntry) {
             app = entry
             itemView.contentDescription = entry.label
-            val background = itemView.background.mutate() as GradientDrawable
             if (entry.banner != null) {
                 banner.setImageDrawable(entry.banner)
                 banner.visibility = View.VISIBLE
                 iconGroup.visibility = View.GONE
-                background.setColor(BANNER_BACKGROUND)
+                itemView.background = cardBackground(BANNER_BACKGROUND, BANNER_BACKGROUND)
             } else {
                 icon.setImageDrawable(entry.icon)
                 label.text = entry.label
                 banner.visibility = View.GONE
                 iconGroup.visibility = View.VISIBLE
-                background.setColor(CARD_COLORS[entry.packageName.hashCode().mod(CARD_COLORS.size)])
+                itemView.background = cardBackground(darken(entry.accent, 0.75f), darken(entry.accent, 0.3f))
+            }
+            showFocus(itemView.isFocused, animate = false)
+        }
+
+        private fun cardBackground(start: Int, end: Int) =
+            GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(start, end)).apply {
+                cornerRadius = density * 16
+            }
+
+        private fun showFocus(focused: Boolean, animate: Boolean) {
+            val scale = if (focused) 1.12f else 1f
+            val alpha = if (focused) 1f else UNFOCUSED_ALPHA
+            itemView.translationZ = if (focused) density * 12 else 0f
+            if (animate) {
+                itemView.animate()
+                    .scaleX(scale).scaleY(scale).alpha(alpha)
+                    .setInterpolator(if (focused) OvershootInterpolator(2f) else DecelerateInterpolator())
+                    .setDuration(220)
+                    .start()
+            } else {
+                itemView.animate().cancel()
+                itemView.scaleX = scale
+                itemView.scaleY = scale
+                itemView.alpha = alpha
             }
         }
     }
 
     private companion object {
-        const val BANNER_BACKGROUND = 0xFF1C1F2E.toInt()
+        const val BANNER_BACKGROUND = 0xFF1A1A24.toInt()
+        const val UNFOCUSED_ALPHA = 0.8f
 
-        // Phone-style apps have no banner, so give each a stable color tile instead.
-        val CARD_COLORS = intArrayOf(
-            0xFF3949AB.toInt(),
-            0xFF00897B.toInt(),
-            0xFF8E24AA.toInt(),
-            0xFFD81B60.toInt(),
-            0xFF5E35B1.toInt(),
-            0xFF039BE5.toInt(),
-            0xFF43A047.toInt(),
-            0xFFF4511E.toInt(),
+        fun darken(color: Int, factor: Float): Int = Color.rgb(
+            (Color.red(color) * factor).toInt(),
+            (Color.green(color) * factor).toInt(),
+            (Color.blue(color) * factor).toInt(),
         )
     }
 }
