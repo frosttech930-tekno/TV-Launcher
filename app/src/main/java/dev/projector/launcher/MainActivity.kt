@@ -3,6 +3,7 @@ package dev.projector.launcher
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -111,9 +112,12 @@ class MainActivity : Activity() {
         findViewById<View>(R.id.btn_bluetooth).setOnClickListener {
             startSafely(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
         }
-        // Keystone, focus and picture mode usually live under display settings on projector builds.
-        findViewById<View>(R.id.btn_display).setOnClickListener {
-            startSafely(Intent(Settings.ACTION_DISPLAY_SETTINGS))
+        // Keystone, focus and picture settings live in the vendor's console app on HT13-style projectors.
+        findViewById<View>(R.id.btn_projector).setOnClickListener {
+            val console = Intent()
+                .setComponent(ComponentName(PROJECTOR_CONSOLE_PACKAGE, "$PROJECTOR_CONSOLE_PACKAGE.MainActivity"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startSafely(console, Intent(Settings.ACTION_DISPLAY_SETTINGS))
         }
         findViewById<View>(R.id.btn_settings).setOnClickListener {
             startSafely(Intent(Settings.ACTION_SETTINGS))
@@ -263,5 +267,9 @@ class MainActivity : Activity() {
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+    }
+
+    private companion object {
+        const val PROJECTOR_CONSOLE_PACKAGE = "com.cptp.console"
     }
 }

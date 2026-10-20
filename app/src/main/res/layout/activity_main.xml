@@ -58,9 +58,9 @@
                 android:text="@string/bluetooth" />
 
             <TextView
-                android:id="@+id/btn_display"
+                android:id="@+id/btn_projector"
                 style="@style/QuickButton"
-                android:text="@string/display" />
+                android:text="@string/projector" />
 
             <TextView
                 android:id="@+id/btn_settings"

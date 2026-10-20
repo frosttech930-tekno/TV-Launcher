@@ -6,8 +6,9 @@ and vendor AOSP builds). It is built for a remote control: everything works with
 ## Features
 
 - **Clock and date** in the top-left, laid out inside the TV-safe area so projector overscan doesn't clip it.
-- **Quick buttons** for Wi-Fi, Bluetooth, Display (keystone, focus and picture settings usually live
-  here on projectors) and Settings. If the firmware lacks a screen, the main Settings screen opens instead.
+- **Quick buttons** for Wi-Fi, Bluetooth, Projector (opens the HT13's keystone/focus console,
+  `com.cptp.console`, falling back to display settings) and Settings. If the firmware lacks a screen,
+  the main Settings screen opens instead.
 - **Favorites row**: on first run it pins whichever of YouTube, Netflix, Prime Video, Disney+, Plex,
   Kodi and VLC are installed.
 - **All apps grid**: shows TV apps with their 16:9 banners and phone apps as colored tiles.
@@ -40,6 +41,17 @@ APK as a workflow artifact.
    ```
    With no computer, you can sideload with an app such as *Downloader* or *Send Files to TV*.
 3. Press **Home**. If the projector asks which launcher to use, pick **Projector Launcher** → *Always*.
+
+### HT13 projector (stock launcher `com.chiptrip.tv.launcher`)
+
+After installing, make this the home screen with:
+```sh
+adb shell cmd package set-home-activity dev.projector.launcher/.MainActivity
+```
+To go back to the stock launcher:
+```sh
+adb shell cmd package set-home-activity com.chiptrip.tv.launcher/com.dymt.tvlauncher.activity.HomeActivity
+```
 
 ### If Home still opens the stock launcher
 
