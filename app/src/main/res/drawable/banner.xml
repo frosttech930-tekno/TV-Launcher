@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 320x180 banner shown for this launcher in Android TV's app list. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path
+        android:fillColor="#FF2B1F4A"
+        android:pathData="M0,0h320v180h-320z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M100,60h120a12,12 0,0 1,12 12v40a12,12 0,0 1,-12 12h-120a12,12 0,0 1,-12 -12v-40a12,12 0,0 1,12 -12z" />
+    <path
+        android:fillColor="#FF5E35B1"
+        android:pathData="M185,92m-20,0a20,20 0,1 0,40 0a20,20 0,1 0,-40 0" />
+    <path
+        android:fillColor="#FF5E35B1"
+        android:pathData="M106,76h30v8h-30z" />
+</vector>
