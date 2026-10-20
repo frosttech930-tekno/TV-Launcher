@@ -9,6 +9,8 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
+    <!-- Downloads movie info and artwork for the home screen carousel. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
     <!-- Android 11+ package visibility: lets us see every launchable app. -->

@@ -5,16 +5,18 @@ and vendor AOSP builds). It is built for a remote control: everything works with
 
 ## Features
 
-- **Streaming-app look**: a dark theme with big rounded cards in two horizontal rows, "For you" and
-  "All apps". The selected card zooms in with a bounce, its name appears in large type, and a soft
-  glow behind everything changes to match the app's colors.
-- **Clock and date** in the top-right, laid out inside the TV-safe area so projector overscan doesn't clip it.
+- **Apple TV–style home screen**: full-screen artwork of movies now in theaters cross-fades every
+  8 seconds with a slow zoom, showing each movie's title, year, rating and synopsis. Movie data and
+  artwork come from [TMDB](https://www.themoviedb.org): add a free API key in *More → Movie carousel*.
+- **Dock**: your favorite apps sit along the bottom as rounded tiles. The focused tile lifts and shows
+  its name, and moving down slides up the "All apps" row.
+- **Clock** in the top-right, laid out inside the TV-safe area so projector overscan doesn't clip it.
 - **Quick buttons** for Wi-Fi, Bluetooth, Projector (opens the HT13's keystone/focus console,
   `com.cptp.console`, falling back to display settings), Settings and More (launcher options).
   If the firmware lacks a screen, the main Settings screen opens instead.
-- **For you row**: on first run it pins whichever of YouTube, Netflix, Prime Video, Disney+, Plex,
+- **Favorites**: on first run it pins whichever of YouTube, Netflix, Prime Video, Disney+, Plex,
   Kodi and VLC are installed.
-- **All apps row**: TV apps show their 16:9 banners. Phone apps get a card tinted with their icon's color.
+- **App tiles**: TV apps show their 16:9 banners. Phone apps get a tile tinted with their icon's color.
 - **App menu**: hold OK, or press Menu, on an app to pin or unpin it, reorder favorites, hide it,
   open App info, or uninstall it.
 - **Launcher button**: restore hidden apps, or open the system "default home app" chooser.
@@ -79,4 +81,8 @@ Some Google TV builds don't let you choose a home app. Try one of these:
 | `MainActivity.kt` | Home screen, quick buttons, app menus, back/home handling |
 | `AppRepository.kt` | Finds launchable TV and phone apps, with their banners, icons and accent colors |
 | `AppAdapter.kt` | Focusable app cards with the bounce-on-focus animation |
-| `LauncherPrefs.kt` | Saves favorites, their order, and hidden apps |
+| `HeroCarousel.kt` | The cross-fading, slowly zooming movie backdrops and their text |
+| `MovieRepository.kt` | Fetches now-playing movies from TMDB and caches their artwork |
+| `LauncherPrefs.kt` | Saves favorites, their order, hidden apps, and the TMDB key |
+
+This product uses the TMDB API but is not endorsed or certified by TMDB.

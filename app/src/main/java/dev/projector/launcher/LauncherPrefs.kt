@@ -11,6 +11,11 @@ class LauncherPrefs(context: Context) {
         get() = prefs.getString(KEY_FAVORITES, "").orEmpty().split('\n').filter { it.isNotEmpty() }
         private set(value) = prefs.edit().putString(KEY_FAVORITES, value.joinToString("\n")).apply()
 
+    /** TMDB API key or read access token for the movie carousel; empty when not set up. */
+    var tmdbKey: String
+        get() = prefs.getString(KEY_TMDB, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_TMDB, value).apply()
+
     val hidden: Set<String>
         get() = prefs.getStringSet(KEY_HIDDEN, emptySet()).orEmpty().toSet()
 
@@ -52,6 +57,7 @@ class LauncherPrefs(context: Context) {
         const val KEY_FAVORITES = "favorites"
         const val KEY_HIDDEN = "hidden"
         const val KEY_SEEDED = "seeded"
+        const val KEY_TMDB = "tmdb_key"
 
         val DEFAULT_FAVORITES = listOf(
             "com.google.android.youtube.tv",
