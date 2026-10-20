@@ -1,6 +1,7 @@
 package dev.projector.launcher
 
 import android.content.Context
+import java.security.SecureRandom
 
 class LauncherPrefs(context: Context) {
 
@@ -15,6 +16,16 @@ class LauncherPrefs(context: Context) {
     var tmdbKey: String
         get() = prefs.getString(KEY_TMDB, "").orEmpty()
         set(value) = prefs.edit().putString(KEY_TMDB, value).apply()
+
+    var remoteEnabled: Boolean
+        get() = prefs.getBoolean(KEY_REMOTE_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(KEY_REMOTE_ENABLED, value).apply()
+
+    /** Four-digit PIN the phone remote must send; created once so saved phone shortcuts keep working. */
+    val remotePin: String
+        get() = prefs.getString(KEY_REMOTE_PIN, null) ?: (1000 + SecureRandom().nextInt(9000)).toString().also {
+            prefs.edit().putString(KEY_REMOTE_PIN, it).apply()
+        }
 
     val hidden: Set<String>
         get() = prefs.getStringSet(KEY_HIDDEN, emptySet()).orEmpty().toSet()
@@ -58,6 +69,8 @@ class LauncherPrefs(context: Context) {
         const val KEY_HIDDEN = "hidden"
         const val KEY_SEEDED = "seeded"
         const val KEY_TMDB = "tmdb_key"
+        const val KEY_REMOTE_ENABLED = "remote_enabled"
+        const val KEY_REMOTE_PIN = "remote_pin"
 
         val DEFAULT_FAVORITES = listOf(
             "com.google.android.youtube.tv",

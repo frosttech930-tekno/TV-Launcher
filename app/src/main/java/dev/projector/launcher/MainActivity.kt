@@ -8,6 +8,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -27,6 +28,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import java.util.concurrent.Executors
 
 class MainActivity : Activity() {
@@ -105,6 +108,7 @@ class MainActivity : Activity() {
         allAppsRow.adapter = allAppsAdapter
 
         bindQuickButtons()
+        if (prefs.remoteEnabled) RemoteService.start(this)
 
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_PACKAGE_ADDED)
@@ -360,6 +364,7 @@ class MainActivity : Activity() {
 
     private fun showLauncherOptions() {
         val items = arrayOf(
+            getString(R.string.phone_remote),
             getString(R.string.movie_carousel),
             getString(R.string.manage_hidden),
             getString(R.string.choose_default_home),
@@ -368,12 +373,68 @@ class MainActivity : Activity() {
             .setTitle(R.string.launcher_options)
             .setItems(items) { _, which ->
                 when (which) {
-                    0 -> showMovieKeyDialog()
-                    1 -> showHiddenApps()
-                    2 -> startSafely(Intent(Settings.ACTION_HOME_SETTINGS))
+                    0 -> showPhoneRemote()
+                    1 -> showMovieKeyDialog()
+                    2 -> showHiddenApps()
+                    3 -> startSafely(Intent(Settings.ACTION_HOME_SETTINGS))
                 }
             }
             .show()
+    }
+
+    private fun showPhoneRemote() {
+        if (!prefs.remoteEnabled) {
+            AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+                .setTitle(R.string.phone_remote)
+                .setMessage(R.string.remote_intro)
+                .setPositiveButton(R.string.remote_turn_on) { _, _ ->
+                    prefs.remoteEnabled = true
+                    RemoteService.start(this)
+                    showPhoneRemote()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+            return
+        }
+
+        val address = RemoteServer.localAddress()
+        if (address == null) {
+            toast(getString(R.string.remote_no_network))
+            return
+        }
+        val url = "http://$address:${RemoteServer.PORT}/?pin=${prefs.remotePin}"
+        val view = layoutInflater.inflate(R.layout.dialog_remote, null)
+        val size = (resources.displayMetrics.density * 188).toInt()
+        view.findViewById<ImageView>(R.id.remote_qr).setImageBitmap(qrCode(url, size))
+        view.findViewById<TextView>(R.id.remote_url).text = "http://$address:${RemoteServer.PORT}"
+        view.findViewById<TextView>(R.id.remote_pin).text = getString(R.string.remote_pin, prefs.remotePin)
+        val status = view.findViewById<TextView>(R.id.remote_status)
+
+        // Keep the status line live so the user sees it change once they accept the adb prompt.
+        val refresh = object : Runnable {
+            override fun run() {
+                status.text = getString(R.string.remote_status_label, getString(AdbBridge.status))
+                mainHandler.postDelayed(this, 1_000)
+            }
+        }
+        refresh.run()
+        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+            .setTitle(R.string.phone_remote)
+            .setView(view)
+            .setPositiveButton(android.R.string.ok, null)
+            .setNegativeButton(R.string.remote_turn_off) { _, _ ->
+                prefs.remoteEnabled = false
+                RemoteService.stop(this)
+            }
+            .setOnDismissListener { mainHandler.removeCallbacks(refresh) }
+            .show()
+    }
+
+    private fun qrCode(text: String, size: Int): Bitmap {
+        val matrix = QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, size, size)
+        val (w, h) = matrix.width to matrix.height
+        val pixels = IntArray(w * h) { i -> if (matrix.get(i % w, i / w)) Color.BLACK else Color.WHITE }
+        return Bitmap.createBitmap(pixels, w, h, Bitmap.Config.RGB_565)
     }
 
     private fun showMovieKeyDialog() {

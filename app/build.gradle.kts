@@ -46,4 +46,8 @@ android {
 
 dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    // adb client, used by the phone remote to press keys on this device.
+    implementation("dev.mobile:dadb:1.2.10")
+    // QR code that opens the phone remote.
+    implementation("com.google.zxing:core:3.5.3")
 }

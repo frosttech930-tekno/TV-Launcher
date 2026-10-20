@@ -17,6 +17,11 @@ and vendor AOSP builds). It is built for a remote control: everything works with
 - **Favorites**: on first run it pins whichever of YouTube, Netflix, Prime Video, Disney+, Plex,
   Kodi and VLC are installed.
 - **App tiles**: TV apps show their 16:9 banners. Phone apps get a tile tinted with their icon's color.
+- **Phone remote**: *More → Phone remote* shows a QR code. Scan it with an iPhone (or any phone on the
+  same Wi-Fi) for a remote with a D-pad, Back/Home/Menu, volume, play/pause and a keyboard box for
+  typing passwords and searches. It sends key presses through the projector's own adb daemon, so it
+  needs USB debugging left on and a one-time "Allow USB debugging?" approval; requests are protected
+  by a 4-digit PIN.
 - **App menu**: hold OK, or press Menu, on an app to pin or unpin it, reorder favorites, hide it,
   open App info, or uninstall it.
 - **Launcher button**: restore hidden apps, or open the system "default home app" chooser.
@@ -83,6 +88,9 @@ Some Google TV builds don't let you choose a home app. Try one of these:
 | `AppAdapter.kt` | Focusable app cards with the bounce-on-focus animation |
 | `HeroCarousel.kt` | The cross-fading, slowly zooming movie backdrops and their text |
 | `MovieRepository.kt` | Fetches now-playing movies from TMDB and caches their artwork |
+| `RemoteService.kt`, `RemoteServer.kt` | Foreground service and tiny web server behind the phone remote |
+| `AdbBridge.kt` | Presses keys and types text on the projector through its own adb daemon |
+| `assets/remote.html` | The remote page the phone opens |
 | `LauncherPrefs.kt` | Saves favorites, their order, hidden apps, and the TMDB key |
 
 This product uses the TMDB API but is not endorsed or certified by TMDB.
